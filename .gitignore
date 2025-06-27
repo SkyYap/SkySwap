@@ -19,3 +19,8 @@ node_modules/
 
 # Cursor Rules
 .cursor
+
+# Broadcast files
+broadcast/
+broadcast/00_DeployHook.s.sol/1301/run-1750999608.json
+broadcast/00_DeployHook.s.sol/1301/run-latest.json
