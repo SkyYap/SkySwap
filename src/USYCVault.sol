@@ -4,12 +4,12 @@ pragma solidity ^0.8.26;
 import {LibErrors} from "./libraries/LibErrors.sol";
 import {LibTypes} from "./libraries/LibTypes.sol";
 
-/// @title SkyUSDVault
-/// @notice Manages flash mint and debt issuance/redemption of skyUSD (see .cursor/rules/uniswap-v4-hooks.md)
-contract SkyUSDVault {
+/// @title USYCVault
+/// @notice Manages flash mint and debt issuance/redemption of USYC (see .cursor/rules/uniswap-v4-hooks.md)
+contract USYCVault {
     // --- ERC20-like State ---
-    string public constant name = "Sky USD";
-    string public constant symbol = "skyUSD";
+    string public constant name = "USYC";
+    string public constant symbol = "USYC";
     uint8 public constant decimals = 18;
 
     uint256 public totalSupply;

@@ -2,11 +2,11 @@
 pragma solidity ^0.8.26;
 
 import {Test, console2} from "forge-std/Test.sol";
-import {SkyUSDVault} from "../src/SkyUSDVault.sol";
+import {USYCVault} from "../src/USYCVault.sol";
 import {LibErrors} from "../src/libraries/LibErrors.sol";
 
-contract SkyUSDVaultTest is Test {
-    SkyUSDVault vault;
+contract USYCVaultTest is Test {
+    USYCVault vault;
     address hook;
     address alice;
     address bob;
@@ -19,7 +19,7 @@ contract SkyUSDVaultTest is Test {
     event Repay(address indexed user, uint256 amount);
 
     function setUp() public {
-        vault = new SkyUSDVault();
+        vault = new USYCVault();
         hook = makeAddr("hook");
         alice = makeAddr("alice");
         bob = makeAddr("bob");
@@ -29,8 +29,8 @@ contract SkyUSDVaultTest is Test {
     }
 
     function testInitialState() public {
-        assertEq(vault.name(), "Sky USD");
-        assertEq(vault.symbol(), "skyUSD");
+        assertEq(vault.name(), "USYC");
+        assertEq(vault.symbol(), "USYC");
         assertEq(vault.decimals(), 18);
         assertEq(vault.totalSupply(), 0);
         assertEq(vault.owner(), address(this));
@@ -281,9 +281,9 @@ contract SkyUSDVaultTest is Test {
 
 // Mock contract for testing flash loans
 contract MockFlashLoanRecipient {
-    SkyUSDVault public vault;
-    
-    constructor(SkyUSDVault _vault) {
+        USYCVault public vault;
+
+    constructor(USYCVault _vault) {
         vault = _vault;
     }
     

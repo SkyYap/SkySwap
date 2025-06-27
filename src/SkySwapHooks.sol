@@ -13,7 +13,7 @@ import {Currency} from "@uniswap/v4-core/src/types/Currency.sol";
 import {LibErrors} from "./libraries/LibErrors.sol";
 import {LibTypes} from "./libraries/LibTypes.sol";
 import {LibMath} from "./libraries/LibMath.sol";
-import {SkyUSDVault} from "./SkyUSDVault.sol";
+import {USYCVault} from "./USYCVault.sol";
 import {CollateralManager} from "./CollateralManager.sol";
 import {OracleManager} from "./OracleManager.sol";
 import {SkySwapPool} from "./SkySwapPool.sol";
@@ -25,7 +25,7 @@ contract SkySwapHooks is BaseHook {
 
     // --- State ---
     address public owner;
-    SkyUSDVault public immutable skyUSDVault;
+    USYCVault public immutable usycVault;
     CollateralManager public immutable collateralManager;
     OracleManager public immutable oracleManager;
     
@@ -47,12 +47,12 @@ contract SkySwapHooks is BaseHook {
 
     constructor(
         IPoolManager _poolManager,
-        address _skyUSDVault,
+        address _usycVault,
         address _collateralManager,
         address _oracleManager
     ) BaseHook(_poolManager) {
         owner = msg.sender;
-        skyUSDVault = SkyUSDVault(_skyUSDVault);
+        usycVault = USYCVault(_usycVault);
         collateralManager = CollateralManager(_collateralManager);
         oracleManager = OracleManager(payable(_oracleManager));
     }
@@ -247,15 +247,15 @@ contract SkySwapHooks is BaseHook {
         
         if (amountIn == 0) revert LibErrors.ZeroAmount();
         
-        // Flash mint skyUSD equal to the token value
+        // Flash mint USYC equal to the token value
         uint256 oraclePrice = oracleManager.getPrice(tokenIn);
-        uint256 skyUSDAmount = LibMath.wmul(amountIn, oraclePrice);
+        uint256 usycAmount = LibMath.wmul(amountIn, oraclePrice);
         
-        // Flash mint skyUSD to this contract
-        skyUSDVault.flashMint(address(this), skyUSDAmount);
+        // Flash mint USYC to this contract
+        usycVault.flashMint(address(this), usycAmount);
         
         // Store flash loan info for later repayment
-        userPositions[sender][poolId].debt = skyUSDAmount;
+        userPositions[sender][poolId].debt = usycAmount;
         
         emit SingleSidedLiquidityAdded(sender, poolId, amountIn);
     }
@@ -276,15 +276,15 @@ contract SkySwapHooks is BaseHook {
         // Step 1: Deposit LP tokens as collateral
         collateralManager.depositCollateral(sender, lpTokenAmount);
         
-        // Step 2: Borrow skyUSD against LP collateral (50% LTV)
+        // Step 2: Borrow USYC against LP collateral (50% LTV)
         uint256 borrowAmount = flashLoanAmount; // Should equal flash loan amount
-        skyUSDVault.mint(address(this), borrowAmount);
+        usycVault.mint(address(this), borrowAmount);
         
         // Step 3: Update user debt in collateral manager
         collateralManager.updateUserDebt(sender, borrowAmount);
         
         // Step 4: Repay flash loan
-        skyUSDVault.burn(address(this), flashLoanAmount);
+        usycVault.burn(address(this), flashLoanAmount);
         
         // Step 5: Clear temporary debt tracking
         userPositions[sender][poolId].debt = borrowAmount; // Now tracks actual debt
@@ -325,9 +325,9 @@ contract SkySwapHooks is BaseHook {
             uint256 debtToRepay = LibMath.wmul(userDebt, 
                 LibMath.wdiv(removalAmount, userPositions[sender][poolId].lpCollateral));
             
-            // Burn skyUSD to repay debt
-            skyUSDVault.burn(sender, debtToRepay);
-            skyUSDVault.repay(sender, debtToRepay);
+                          // Burn USYC to repay debt
+                    usycVault.burn(sender, debtToRepay);
+        usycVault.repay(sender, debtToRepay);
             
             // Update debt tracking
             userPositions[sender][poolId].debt -= debtToRepay;

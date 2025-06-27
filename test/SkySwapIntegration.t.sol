@@ -5,7 +5,7 @@ import {Test, console2} from "forge-std/Test.sol";
 import {SkySwapFactory} from "../src/SkySwapFactory.sol";
 import {SkySwapHooks} from "../src/SkySwapHooks.sol";
 import {SkySwapPool} from "../src/SkySwapPool.sol";
-import {SkyUSDVault} from "../src/SkyUSDVault.sol";
+import {USYCVault} from "../src/USYCVault.sol";
 import {CollateralManager} from "../src/CollateralManager.sol";
 import {OracleManager} from "../src/OracleManager.sol";
 import {LibErrors} from "../src/libraries/LibErrors.sol";
@@ -52,7 +52,7 @@ contract MockAggregatorV3 {
 contract SkySwapIntegrationTest is Test {
     // Core contracts
     SkySwapFactory factory;
-    SkyUSDVault skyUSDVault;
+    USYCVault usycVault;
     CollateralManager collateralManager;
     OracleManager oracleManager;
     SkySwapHooks hooks;
@@ -78,7 +78,7 @@ contract SkySwapIntegrationTest is Test {
         bob = makeAddr("bob");
         
         // Deploy core contracts
-        skyUSDVault = new SkyUSDVault();
+        usycVault = new USYCVault();
         
         // Deploy mock verifier and link address for data streams
         address mockVerifier = makeAddr("verifier");
@@ -114,13 +114,13 @@ contract SkySwapIntegrationTest is Test {
         MockPoolManager mockPoolManager = new MockPoolManager();
         hooks = new SkySwapHooks(
             IPoolManager(address(mockPoolManager)),
-            address(skyUSDVault),
+            address(usycVault),
             address(collateralManager),
             address(oracleManager)
         );
         
         // Set up contract relationships
-        skyUSDVault.setSkySwapHooks(address(hooks));
+        usycVault.setSkySwapHooks(address(hooks));
         collateralManager.setSkySwapHooks(address(hooks));
         
         // Deploy pool
@@ -183,17 +183,17 @@ contract SkySwapIntegrationTest is Test {
         vm.prank(address(hooks));
         collateralManager.depositCollateral(alice, collateralAmount);
         
-        // Mint skyUSD (creating debt)
+        // Mint USYC (creating debt)
         vm.prank(address(hooks));
-        skyUSDVault.mint(alice, debtAmount);
+        usycVault.mint(alice, debtAmount);
         
         // Update collateral manager with debt
         vm.prank(address(hooks));
         collateralManager.updateUserDebt(alice, debtAmount);
         
         // Verify states
-        assertEq(skyUSDVault.balanceOf(alice), debtAmount);
-        assertEq(skyUSDVault.getDebt(alice), debtAmount);
+        assertEq(usycVault.balanceOf(alice), debtAmount);
+        assertEq(usycVault.getDebt(alice), debtAmount);
         assertEq(collateralManager.checkLTV(alice), 4000); // 40% in basis points
         assertFalse(collateralManager.isLiquidatable(alice));
     }
@@ -227,15 +227,15 @@ contract SkySwapIntegrationTest is Test {
         uint256 flashAmount = 1000e18;
         
         // Create flash loan recipient
-        MockFlashLoanRecipient recipient = new MockFlashLoanRecipient(skyUSDVault);
+        MockFlashLoanRecipient recipient = new MockFlashLoanRecipient(usycVault);
         
         // Perform flash mint
         vm.prank(address(hooks));
-        skyUSDVault.flashMint(address(recipient), flashAmount);
+        usycVault.flashMint(address(recipient), flashAmount);
         
         // Verify flash loan completed successfully
-        assertEq(skyUSDVault.balanceOf(address(recipient)), 0);
-        assertEq(skyUSDVault.totalSupply(), 0);
+        assertEq(usycVault.balanceOf(address(recipient)), 0);
+        assertEq(usycVault.totalSupply(), 0);
     }
 
     function testFullIntegration_Liquidation() public {
@@ -247,7 +247,7 @@ contract SkySwapIntegrationTest is Test {
         collateralManager.depositCollateral(alice, collateralAmount);
         
         vm.prank(address(hooks));
-        skyUSDVault.mint(alice, debtAmount);
+        usycVault.mint(alice, debtAmount);
         
         // Force liquidatable state by manipulating storage
         vm.store(
@@ -285,40 +285,40 @@ contract SkySwapIntegrationTest is Test {
         uint256 collateralAmount = 1000e18;
         uint256 debtAmount = 300e18; // 30% LTV
         
-        // Alice deposits collateral and mints skyUSD
+        // Alice deposits collateral and mints USYC
         vm.prank(address(hooks));
         collateralManager.depositCollateral(alice, collateralAmount);
         
         vm.prank(address(hooks));
-        skyUSDVault.mint(alice, debtAmount);
+        usycVault.mint(alice, debtAmount);
         
         vm.prank(address(hooks));
         collateralManager.updateUserDebt(alice, debtAmount);
         
-        // Bob deposits collateral and mints skyUSD
+        // Bob deposits collateral and mints USYC
         vm.prank(address(hooks));
         collateralManager.depositCollateral(bob, collateralAmount);
         
         vm.prank(address(hooks));
-        skyUSDVault.mint(bob, debtAmount);
+        usycVault.mint(bob, debtAmount);
         
         vm.prank(address(hooks));
         collateralManager.updateUserDebt(bob, debtAmount);
         
         // Verify both users have correct states
-        assertEq(skyUSDVault.balanceOf(alice), debtAmount);
-        assertEq(skyUSDVault.balanceOf(bob), debtAmount);
-        assertEq(skyUSDVault.totalSupply(), debtAmount * 2);
+        assertEq(usycVault.balanceOf(alice), debtAmount);
+        assertEq(usycVault.balanceOf(bob), debtAmount);
+        assertEq(usycVault.totalSupply(), debtAmount * 2);
         
         assertEq(collateralManager.checkLTV(alice), 3000); // 30%
         assertEq(collateralManager.checkLTV(bob), 3000); // 30%
         
-        // Alice transfers skyUSD to Bob
+        // Alice transfers USYC to Bob
         vm.prank(alice);
-        skyUSDVault.transfer(bob, debtAmount / 2);
+        usycVault.transfer(bob, debtAmount / 2);
         
-        assertEq(skyUSDVault.balanceOf(alice), debtAmount / 2);
-        assertEq(skyUSDVault.balanceOf(bob), debtAmount + debtAmount / 2);
+        assertEq(usycVault.balanceOf(alice), debtAmount / 2);
+        assertEq(usycVault.balanceOf(bob), debtAmount + debtAmount / 2);
     }
 
     function testFullIntegration_ErrorHandling() public {
@@ -335,7 +335,7 @@ contract SkySwapIntegrationTest is Test {
         
         // Test hook-only functions
         vm.expectRevert(LibErrors.OnlyHook.selector);
-        skyUSDVault.mint(alice, 1000e18);
+        usycVault.mint(alice, 1000e18);
         
         vm.expectRevert(LibErrors.OnlyHook.selector);
         collateralManager.depositCollateral(alice, 1000e18);
@@ -347,9 +347,9 @@ contract SkySwapIntegrationTest is Test {
 
 // Mock contract for flash loan testing
 contract MockFlashLoanRecipient {
-    SkyUSDVault public vault;
+    USYCVault public vault;
     
-    constructor(SkyUSDVault _vault) {
+    constructor(USYCVault _vault) {
         vault = _vault;
     }
     

@@ -8,7 +8,7 @@ import {BaseScript} from "./base/BaseScript.sol";
 
 import {SkySwapHooks} from "../src/SkySwapHooks.sol";
 import {OracleManager} from "../src/OracleManager.sol";
-import {SkyUSDVault} from "../src/SkyUSDVault.sol";
+import {USYCVault} from "../src/USYCVault.sol";
 import {CollateralManager} from "../src/CollateralManager.sol";
 
 /// @notice Mines the address and deploys the SkySwapHooks.sol Hook contract
@@ -29,14 +29,14 @@ contract DeployHookScript is BaseScript {
         vm.startBroadcast();
         // Deploy OracleManager with mock addresses for demo
         OracleManager oracleManager = new OracleManager(mockVerifier, mockLink);
-        SkyUSDVault skyUSDVault = new SkyUSDVault();
+        USYCVault usycVault = new USYCVault();
         CollateralManager collateralManager = new CollateralManager(address(oracleManager));
         vm.stopBroadcast();
 
         // Mine a salt that will produce a hook address with the correct flags
         bytes memory constructorArgs = abi.encode(
             poolManager, 
-            address(skyUSDVault), 
+            address(usycVault), 
             address(collateralManager), 
             address(oracleManager)
         );
@@ -47,7 +47,7 @@ contract DeployHookScript is BaseScript {
         vm.startBroadcast();
         SkySwapHooks skySwapHooks = new SkySwapHooks{salt: salt}(
             poolManager, 
-            address(skyUSDVault), 
+            address(usycVault), 
             address(collateralManager), 
             address(oracleManager)
         );
