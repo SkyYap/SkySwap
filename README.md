@@ -14,6 +14,7 @@ SkySwap is an advanced decentralized finance (DeFi) protocol built on Uniswap V4
 - **USYC Flash Minting**: Instant liquidity through flash loan mechanisms
 - **Collateralized Debt Positions (CDPs)**: Borrow USYC against LP token collateral
 - **Dynamic Oracle Integration**: Real-time price feeds via Chainlink Data Streams
+- **Use of USYC**: Additional yield stream to LP provider
 
 ## 🏗️ Architecture
 
