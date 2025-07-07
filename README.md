@@ -4,24 +4,29 @@
 ![Solidity](https://img.shields.io/badge/Solidity-^0.8.26-363636?logo=solidity)
 ![Uniswap V4](https://img.shields.io/badge/Uniswap-V4%20Hooks-ff007a)
 ![Chainlink](https://img.shields.io/badge/Chainlink-Data%20Streams-375bd2)
+![EulerSwap](https://img.shields.io/badge/EulerSwap-Integration-6e44ff)
 
-SkySwap is an advanced decentralized finance (DeFi) protocol built on Uniswap V4 hooks, featuring single-sided liquidity provision, collateralized debt positions, and USYC (USD Yield Coin) flash minting capabilities.
+SkySwap is an advanced decentralized finance (DeFi) protocol built on Uniswap V4 hooks, featuring single-sided liquidity provision, collateralized debt positions, and USSKY (wrapped of USD Yield-Bearing Coin) flash minting capabilities.
+
+## 📄 Whitepaper
+
+[Read the SkySwap Whitepaper](https://docs.google.com/document/d/1Zi5tqRVyf7uHWlxWrPH1v5NAi-EERH8zuMdJ9Fn5wZM/edit?usp=sharing)
 
 ## 🚀 Features
 
 ### Core Functionality
 - **Single-Sided Liquidity**: Add liquidity with only one token using flash loans
-- **USYC Flash Minting**: Instant liquidity through flash loan mechanisms
-- **Collateralized Debt Positions (CDPs)**: Borrow USYC against LP token collateral
+- **USSKY Flash Minting**: Instant liquidity through flash loan mechanisms
+- **Collateralized Debt Positions (CDPs)**: Borrow USSKY against LP token collateral
 - **Dynamic Oracle Integration**: Real-time price feeds via Chainlink Data Streams
-- **Use of USYC**: Additional yield stream to LP provider
+- **Use of USSKY**: Additional yield stream to LP provider
 
 ## 🏗️ Architecture
 
 ```mermaid
 graph TB
     A[User] --> B[SkySwapHooks]
-    B --> C[USYCVault]
+    B --> C[USSKYVault]
     B --> D[CollateralManager]
     B --> E[OracleManager]
     B --> F[SkySwapPool]
@@ -41,7 +46,7 @@ graph TB
 | Contract | Description |
 |----------|-------------|
 | `SkySwapHooks` | Main hook contract implementing Uniswap V4 lifecycle hooks |
-| `USYCVault` | ERC-20 compliant vault for USYC token management and flash loans |
+| `USSKYVault` | ERC-20 compliant vault for USYC token management and flash loans |
 | `CollateralManager` | Manages user collateral positions and liquidation logic |
 | `OracleManager` | Chainlink Data Streams integration for price feeds |
 | `SkySwapFactory` | Factory contract for creating new pool instances |
@@ -104,19 +109,19 @@ forge script script/01_CreatePoolAndAddLiquidity.s.sol --rpc-url $RPC_URL --broa
 ```solidity
 // User wants to add liquidity with only Token A
 // The hook will:
-// 1. Flash mint USYC equal to token value
-// 2. Use USYC to acquire Token B from the pool
+// 1. Flash mint USSKY equal to token value
+// 2. Use USSKY to acquire Token B from the pool
 // 3. Add both tokens as liquidity
 // 4. Repay flash loan using LP tokens as collateral
 
 ```
 
-### USYC Flash Minting
+### USSKY Flash Minting
 
 ```solidity
-// Flash mint USYC for arbitrage or other strategies
+// Flash mint USSKY for arbitrage or other strategies
 uint256 flashAmount = 10000e18;
-usycVault.flashMint(recipient, flashAmount);
+usskyVault.flashMint(recipient, flashAmount);
 // Recipient must implement flash loan callback
 // and repay the loan within the same transaction
 ```
@@ -127,9 +132,9 @@ usycVault.flashMint(recipient, flashAmount);
 // Deposit LP tokens as collateral
 collateralManager.depositCollateral(user, lpAmount);
 
-// Borrow USYC against collateral (up to 75% LTV)
+// Borrow USSKY against collateral (up to 75% LTV)
 uint256 borrowAmount = 750e18; // For 1000e18 collateral
-usycVault.mint(user, borrowAmount);
+usskyVault.mint(user, borrowAmount);
 
 // Check liquidation status
 bool isLiquidatable = collateralManager.isLiquidatable(user);
